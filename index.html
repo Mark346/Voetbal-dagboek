@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Voetbal Dagboek</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: app-scherm met krijtlijn-veldkop, inhoud in één kolom, vaste tabbalk onderin */
+:root{
+  --bg:#eef2ec; --card:#ffffff; --fg:#17231b; --muted:#5d6b61; --line:#d5ddd4;
+  --pitch:#1f6b3a; --chalk:#f4f8f1; --accent:#f2c230; --bad:#c2452d; --good:#2f8a4c; --navon:#1f6b3a;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1712; --card:#18231c; --fg:#e7efe8; --muted:#97a69b; --line:#2a3a2f;
+  --pitch:#1a5a31; --chalk:#eef5ec; --accent:#f2c230; --bad:#e2694f; --good:#5cbf7a; --navon:#f2c230; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1712; --card:#18231c; --fg:#e7efe8; --muted:#97a69b; --line:#2a3a2f;
+  --pitch:#1a5a31; --chalk:#eef5ec; --accent:#f2c230; --bad:#e2694f; --good:#5cbf7a; --navon:#f2c230; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--pitch)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--pitch);color:var(--chalk);position:relative;overflow:hidden}
+header .wrap{padding-block:22px 26px;position:relative;z-index:1}
+header::after{content:"";position:absolute;width:220px;height:220px;border:3px solid rgba(255,255,255,.18);border-radius:50%;right:-70px;top:-60px}
+header::before{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.22)}
+h1{font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:1;margin:0;letter-spacing:.01em;text-transform:uppercase}
+.sub{margin:6px 0 0;opacity:.85;font-size:.95rem}
+.streak{display:inline-flex;gap:8px;align-items:center;margin-top:14px;background:rgba(0,0,0,.18);padding:6px 12px;border-radius:999px;font-family:var(--display);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:.95rem}
+.streak b{color:var(--accent);font-size:1.15rem}
+main .wrap{padding-block:18px 110px}
+.view{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+h2{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:1.3rem;margin:0 0 10px}
+label,.lbl{display:block;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+.form{display:flex;flex-direction:column;gap:16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+textarea{min-height:68px;resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;color:var(--fg);font-family:var(--display);font-weight:700;font-size:1.1rem;text-transform:uppercase;letter-spacing:.04em;padding:9px;border-radius:9px}
+.seg button[aria-pressed="true"]{background:var(--pitch);color:var(--chalk)}
+.scale{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.scale button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:9px 0;font-family:var(--display);font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.scale button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#1b1a10}
+.dots{display:flex;gap:6px}
+.dots button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:8px;padding:8px 0;font-size:.85rem;font-weight:600}
+.dots button[aria-pressed="true"]{background:var(--pitch);color:var(--chalk);border-color:var(--pitch)}
+.counter{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.counter button{border:0;background:transparent;color:var(--fg);font-size:1.3rem;width:44px;height:44px}
+.counter span{flex:1;text-align:center;font-family:var(--display);font-weight:700;font-size:1.4rem;font-variant-numeric:tabular-nums}
+.primary{border:0;background:var(--pitch);color:var(--chalk);font-family:var(--display);font-weight:800;font-size:1.3rem;text-transform:uppercase;letter-spacing:.05em;padding:14px;border-radius:12px;width:100%}
+.ghost{border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:10px;padding:7px 12px;font-size:.88rem}
+.note{font-size:.88rem;color:var(--muted);margin:0}
+.goal{background:var(--pitch);color:var(--chalk);border-radius:14px;padding:14px 16px}
+.goal .lbl{color:var(--chalk);opacity:.75}
+.goal p{margin:0;font-size:1.05rem;font-weight:500}
+/* Week */
+.weeknav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.weeknav b{font-family:var(--display);font-weight:700;font-size:1.25rem;text-transform:uppercase;letter-spacing:.03em;text-align:center}
+.weeknav small{display:block;font-family:var(--body);font-weight:500;font-size:.85rem;color:var(--muted);text-transform:none;letter-spacing:0}
+.arrow{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:1.2rem;flex:none}
+.progress{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px}
+.progress i{display:block;height:100%;background:var(--good);border-radius:99px}
+.day{display:grid;grid-template-columns:54px 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.day:first-child{border-top:0;padding-top:2px}
+.day.today .dname{color:var(--pitch);}
+.dname{font-family:var(--display);font-weight:700;text-transform:uppercase;font-size:1.1rem;line-height:1.1}
+.dname small{display:block;font-family:var(--body);font-weight:500;font-size:.78rem;color:var(--muted);text-transform:none}
+.today .dname small{color:var(--fg);font-weight:600}
+.slots{display:flex;flex-direction:column;gap:8px;min-width:0}
+.slot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.slot .what{font-weight:600;flex:1;min-width:110px}
+.slot .what small{display:block;font-weight:500;font-size:.8rem;color:var(--muted)}
+.slot.done{border-color:color-mix(in srgb,var(--good) 50%,var(--line))}
+.slot .go{border:0;background:var(--pitch);color:var(--chalk);border-radius:8px;padding:7px 12px;font-weight:600;font-size:.88rem}
+.slot .x{border:0;background:transparent;color:var(--muted);width:30px;height:30px;border-radius:50%;font-size:1.1rem}
+.score{min-width:34px;height:34px;border-radius:8px;background:var(--accent);color:#1b1a10;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:1.2rem}
+.addrow{display:flex;gap:6px;flex-wrap:wrap}
+.add{border:1px dashed var(--line);background:transparent;color:var(--muted);border-radius:8px;padding:5px 10px;font-size:.82rem;font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.dot.t{background:var(--good)}.dot.w{background:var(--accent)}
+.sched{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.sched button{border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:9px;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--display);font-weight:700;font-size:1rem;text-transform:uppercase}
+.sched button small{font-family:var(--body);font-size:.62rem;font-weight:600;letter-spacing:.03em}
+.sched button.t{background:color-mix(in srgb,var(--good) 18%,var(--card));border-color:var(--good);color:var(--fg)}
+.sched button.w{background:color-mix(in srgb,var(--accent) 30%,var(--card));border-color:var(--accent);color:var(--fg)}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 8px;text-align:center}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.trend{font-size:.95rem;margin:8px 0 0}
+.up{color:var(--good);font-weight:600}.down{color:var(--bad);font-weight:600}
+.chartbox{position:relative}
+canvas{width:100%;height:210px;display:block}
+.chartempty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:.92rem;padding:0 30px}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend span{display:flex;align-items:center;gap:6px}
+/* Dagboek */
+.entry{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:56px 1fr;gap:12px}
+.badge{width:56px;height:56px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--pitch);color:var(--chalk)}
+.badge b{font-family:var(--display);font-weight:800;font-size:1.7rem;line-height:1}
+.badge small{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;opacity:.85}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:4px}
+.chip{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip.match{background:var(--accent);border-color:var(--accent);color:#1b1a10}
+.entry h3{margin:0;font-size:1rem;font-weight:600}
+.entry p{margin:4px 0 0;font-size:.93rem;overflow-wrap:anywhere}
+.entry p strong{color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;display:block}
+.entry .body{min-width:0}
+.del{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.del .yes{border-color:var(--bad);color:var(--bad)}
+.empty{text-align:center;color:var(--muted);padding:28px 12px;background:var(--card);border:1px dashed var(--line);border-radius:14px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-block:6px}
+nav button{border:0;background:transparent;color:var(--muted);font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.95rem;padding:9px 2px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button svg{width:22px;height:22px}
+nav button[aria-current="true"]{color:var(--navon);background:color-mix(in srgb,var(--pitch) 12%,transparent)}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:20;white-space:nowrap}
+.skills{display:flex;flex-direction:column;gap:8px}
+.skillrow{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center}
+.skillrow span{font-weight:600;font-size:.92rem}
+.res{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end}
+.res .dash{font-family:var(--display);font-weight:800;font-size:1.6rem;padding-bottom:6px}
+.chip.W{background:var(--good);border-color:var(--good);color:#fff}
+.chip.G{background:var(--muted);border-color:var(--muted);color:var(--card)}
+.chip.V{background:var(--bad);border-color:var(--bad);color:#fff}
+.wgv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.wgv div{border-radius:10px;padding:10px 4px;background:var(--bg);border:1px solid var(--line)}
+.wgv b{display:block;font-family:var(--display);font-weight:800;font-size:1.8rem;line-height:1;font-variant-numeric:tabular-nums}
+.wgv .W b{color:var(--good)}.wgv .V b{color:var(--bad)}
+.wgv span{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.bars{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.bar{display:grid;grid-template-columns:110px 1fr 40px;gap:10px;align-items:center;font-size:.9rem}
+.bar .track{height:12px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar .track i{display:block;height:100%;border-radius:99px;background:var(--good)}
+.bar b{font-family:var(--display);font-weight:700;font-size:1.1rem;text-align:right;font-variant-numeric:tabular-nums}
+#radar{height:260px}
+@media (max-width:380px){.scale{grid-template-columns:repeat(5,1fr)}h1{font-size:2rem}}
+</style>
+</head>
+<body style="margin:0">
+
+<header>
+  <div class="wrap">
+    <h1>Voetbal Dagboek</h1>
+    <p class="sub">Na elke training of wedstrijd: één minuut invullen.</p>
+    <div class="streak" id="streak"></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <!-- WEEK -->
+    <section id="v-week" class="view">
+      <div class="goal" id="lastGoal" hidden>
+        <span class="lbl">Je doel van vorige keer</span>
+        <p id="lastGoalText"></p>
+      </div>
+      <div class="panel">
+        <div class="weeknav">
+          <button class="arrow" id="wPrev" type="button" aria-label="Vorige week">‹</button>
+          <b id="wTitle"></b>
+          <button class="arrow" id="wNext" type="button" aria-label="Volgende week">›</button>
+        </div>
+        <div class="progress"><i id="wBar" style="width:0"></i></div>
+        <p class="note" id="wSum" style="margin-top:6px"></p>
+      </div>
+      <div class="panel" id="days"></div>
+      <div class="panel">
+        <h2>Vast schema</h2>
+        <p class="note" style="margin-bottom:10px">Tik op een dag om te wisselen: niets, training of wedstrijd. Dit geldt voor elke week. Een extra training of verzette dag pas je hierboven per week aan.</p>
+        <div class="sched" id="sched"></div>
+      </div>
+    </section>
+
+    <!-- NIEUW -->
+    <section id="v-nieuw" class="view" hidden>
+      <div class="panel form">
+        <div class="seg" role="group" aria-label="Soort">
+          <button type="button" id="t-training" aria-pressed="true">Training</button>
+          <button type="button" id="t-wedstrijd" aria-pressed="false">Wedstrijd</button>
+        </div>
+        <div class="row">
+          <div><label for="f-date">Datum</label><input type="date" id="f-date"></div>
+          <div id="oppField" hidden><label for="f-opp">Tegen</label><input type="text" id="f-opp" placeholder="bijv. VV Oranje"></div>
+        </div>
+        <div>
+          <span class="lbl">Hoe ging het? (cijfer)</span>
+          <div class="scale" id="scale"></div>
+        </div>
+        <div class="row">
+          <div><span class="lbl">Energie</span><div class="dots" id="energy"></div></div>
+          <div><span class="lbl">Inzet</span><div class="dots" id="effort"></div></div>
+        </div>
+        <div><span class="lbl">Slaap vannacht</span><div class="counter" style="max-width:220px"><button type="button" data-c="sleep" data-d="-0.5" aria-label="Minder slaap">−</button><span id="c-sleep">9 u</span><button type="button" data-c="sleep" data-d="0.5" aria-label="Meer slaap">+</button></div></div>
+        <div id="matchRes" hidden>
+          <span class="lbl">Uitslag</span>
+          <div class="res">
+            <div><span class="lbl" style="text-transform:none;letter-spacing:0">Wij</span><div class="counter"><button type="button" data-c="us" data-d="-1" aria-label="Minder doelpunten wij">−</button><span id="c-us">0</span><button type="button" data-c="us" data-d="1" aria-label="Meer doelpunten wij">+</button></div></div>
+            <span class="dash">–</span>
+            <div><span class="lbl" style="text-transform:none;letter-spacing:0">Zij</span><div class="counter"><button type="button" data-c="them" data-d="-1" aria-label="Minder doelpunten zij">−</button><span id="c-them">0</span><button type="button" data-c="them" data-d="1" aria-label="Meer doelpunten zij">+</button></div></div>
+          </div>
+        </div>
+        <div id="matchStats" class="row" hidden>
+          <div><span class="lbl">Mijn doelpunten</span><div class="counter"><button type="button" data-c="goals" data-d="-1" aria-label="Minder doelpunten">−</button><span id="c-goals">0</span><button type="button" data-c="goals" data-d="1" aria-label="Meer doelpunten">+</button></div></div>
+          <div><span class="lbl">Assists</span><div class="counter"><button type="button" data-c="assists" data-d="-1" aria-label="Minder assists">−</button><span id="c-assists">0</span><button type="button" data-c="assists" data-d="1" aria-label="Meer assists">+</button></div></div>
+        </div>
+        <div>
+          <span class="lbl">Vaardigheden (1 = zwak, 5 = top)</span>
+          <div class="skills" id="skills"></div>
+          <p class="note" style="margin-top:6px">Niet alles hoeft. Tik nog een keer om te wissen.</p>
+        </div>
+        <div><label for="f-good">Wat ging goed?</label><textarea id="f-good" placeholder="bijv. goed vrijgelopen, sterke passes met links"></textarea></div>
+        <div><label for="f-better">Wat kan beter?</label><textarea id="f-better" placeholder="bijv. vaker om me heen kijken voor ik de bal krijg"></textarea></div>
+        <div><label for="f-goal">Doel voor volgende keer</label><input type="text" id="f-goal" placeholder="bijv. 3 keer een kopbal winnen"></div>
+        <button class="primary" id="save" type="button">Opslaan</button>
+        <p class="note" id="saveNote">Kies eerst een cijfer.</p>
+      </div>
+    </section>
+
+    <!-- DAGBOEK -->
+    <section id="v-dagboek" class="view" hidden>
+      <div class="seg" role="group" aria-label="Filter">
+        <button type="button" id="fl-all" aria-pressed="true">Alles</button>
+        <button type="button" id="fl-match" aria-pressed="false">Wedstrijden</button>
+      </div>
+      <div id="list" class="view" style="gap:12px"></div>
+    </section>
+
+    <!-- GROEI -->
+    <section id="v-groei" class="view" hidden>
+      <div class="seg" role="group" aria-label="Periode">
+        <button type="button" data-r="week" aria-pressed="true">Week</button>
+        <button type="button" data-r="maand" aria-pressed="false">Maand</button>
+        <button type="button" data-r="jaar" aria-pressed="false">Jaar</button>
+      </div>
+      <div class="weeknav">
+        <button class="arrow" id="pPrev" type="button" aria-label="Vorige periode">‹</button>
+        <b id="pTitle"></b>
+        <button class="arrow" id="pNext" type="button" aria-label="Volgende periode">›</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="s-count">0</b><span>Keer gespeeld</span></div>
+        <div class="stat"><b id="s-avg">–</b><span>Gem. cijfer</span></div>
+        <div class="stat"><b id="s-goals">0</b><span>Goals + assists</span></div>
+      </div>
+      <div class="panel">
+        <h2 id="chartTitle">Cijfers</h2>
+        <div class="chartbox">
+          <canvas id="chart" aria-label="Grafiek van cijfers"></canvas>
+          <div class="chartempty" id="chartEmpty" hidden></div>
+        </div>
+        <div class="legend" id="legend"><span><i class="dot t"></i>Training</span><span><i class="dot w"></i>Wedstrijd (telt 2x)</span><span>- - gemiddelde</span></div>
+        <p class="trend" id="trend"></p>
+      </div>
+      <div class="panel">
+        <h2>Wedstrijden</h2>
+        <div class="wgv"><div class="W"><b id="r-w">0</b><span>Gewonnen</span></div><div class="G"><b id="r-g">0</b><span>Gelijk</span></div><div class="V"><b id="r-v">0</b><span>Verloren</span></div></div>
+        <p class="trend" id="r-note"></p>
+      </div>
+      <div class="panel">
+        <h2>Vaardigheden</h2>
+        <div class="chartbox">
+          <canvas id="radar" aria-label="Spinnenweb van je vaardigheden"></canvas>
+          <div class="chartempty" id="radarEmpty" hidden></div>
+        </div>
+        <p class="trend" id="skillNote"></p>
+      </div>
+      <div class="panel">
+        <h2>Slaap en cijfer</h2>
+        <div id="sleepBox"></div>
+      </div>
+      <div class="panel">
+        <h2>Waar werk je aan?</h2>
+        <div id="workOn"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<nav>
+  <div class="wrap">
+    <button type="button" data-v="week" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Week</button>
+    <button type="button" data-v="nieuw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nieuw</button>
+    <button type="button" data-v="dagboek"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6"/></svg>Dagboek</button>
+    <button type="button" data-v="groei"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 7-9"/><path d="M15 6h5v5"/></svg>Groei</button>
+  </div>
+</nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const KEY="voetbaldagboek.v2";
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse=s=>new Date(s+"T12:00");
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d)};
+const mondayOf=s=>{const d=parse(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)};
+const TODAY=iso(new Date());
+const DAYS=["Ma","Di","Wo","Do","Vr","Za","Zo"];
+const MONTHS=["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+const MONTHS_L=["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+const TYPE={training:"Training",wedstrijd:"Wedstrijd"};
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nl=n=>n.toFixed(1).replace(".",",");
+
+// ---- Opslag (alleen op dit apparaat)
+let mem=null;
+function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return null}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){return false}}
+let db=load()||{entries:[],schedule:[ "training",null,null,"training",null,"wedstrijd",null ],weeks:{}};
+// schedule: index 0 = maandag ... 6 = zondag
+// weeks: {"<maandag-datum>": [{id, day:0..6, type}]} alleen voor weken die je hebt aangepast
+
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function planFor(mon){
+  if(db.weeks[mon])return db.weeks[mon];
+  return db.schedule.map((t,i)=>t?{id:"s"+i,day:i,type:t}:null).filter(Boolean);
+}
+function editWeek(mon){if(!db.weeks[mon])db.weeks[mon]=planFor(mon).map(p=>({...p,id:uid()}));return db.weeks[mon]}
+
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2200)}
+
+// ---- Weekplanning
+let wMon=mondayOf(TODAY);
+$("wPrev").onclick=()=>{wMon=addDays(wMon,-7);renderWeek()};
+$("wNext").onclick=()=>{wMon=addDays(wMon,7);renderWeek()};
+function weekNo(s){const d=parse(s);d.setDate(d.getDate()+3-((d.getDay()+6)%7));const y=new Date(d.getFullYear(),0,4);return 1+Math.round(((d-y)/864e5-3+((y.getDay()+6)%7))/7)}
+
+function renderWeek(){
+  const sun=addDays(wMon,6);const a=parse(wMon),b=parse(sun);
+  const range=a.getMonth()===b.getMonth()?`${a.getDate()}–${b.getDate()} ${MONTHS[b.getMonth()]}`:`${a.getDate()} ${MONTHS[a.getMonth()]} – ${b.getDate()} ${MONTHS[b.getMonth()]}`;
+  const label=wMon===mondayOf(TODAY)?"Deze week":wMon===addDays(mondayOf(TODAY),7)?"Volgende week":wMon===addDays(mondayOf(TODAY),-7)?"Vorige week":"Week "+weekNo(wMon);
+  $("wTitle").innerHTML=`${label}<small>week ${weekNo(wMon)} · ${range}</small>`;
+  const plan=planFor(wMon);let planned=0,done=0;
+  let html="";
+  for(let i=0;i<7;i++){
+    const date=addDays(wMon,i);const dd=parse(date);
+    const items=plan.filter(p=>p.day===i);
+    const ents=db.entries.filter(e=>e.date===date);
+    const used=new Set();
+    let slots="";
+    items.forEach(p=>{
+      planned++;
+      const e=ents.find(x=>x.type===p.type&&!used.has(x.id));
+      if(e){used.add(e.id);done++;slots+=slotDone(e)}
+      else{
+        const can=date<=TODAY;
+        slots+=`<div class="slot"><i class="dot ${p.type==="wedstrijd"?"w":"t"}"></i><span class="what">${TYPE[p.type]}<small>${can?(date<TODAY?"Nog niet ingevuld":"Vandaag"):"Gepland"}</small></span>${can?`<button type="button" class="go" data-fill="${date}|${p.type}">Invullen</button>`:""}<button type="button" class="x" data-rm="${p.id}" aria-label="${TYPE[p.type]} weghalen voor deze week">×</button></div>`;
+      }
+    });
+    ents.filter(e=>!used.has(e.id)).forEach(e=>{slots+=slotDone(e,true)});
+    slots+=`<div class="addrow"><button type="button" class="add" data-add="${i}|training">+ Training</button>${items.some(p=>p.type==="wedstrijd")?"":`<button type="button" class="add" data-add="${i}|wedstrijd">+ Wedstrijd</button>`}</div>`;
+    html+=`<div class="day ${date===TODAY?"today":""}"><div class="dname">${DAYS[i]}<small>${date===TODAY?"vandaag":dd.getDate()+" "+MONTHS[dd.getMonth()]}</small></div><div class="slots">${slots}</div></div>`;
+  }
+  $("days").innerHTML=html;
+  $("wBar").style.width=planned?Math.round(done/planned*100)+"%":"0";
+  $("wSum").textContent=planned?`${done} van de ${planned} ingevuld`:"Niets gepland deze week. Voeg hieronder een training toe.";
+  $("days").querySelectorAll("[data-fill]").forEach(b=>b.onclick=()=>{const [d,t]=b.dataset.fill.split("|");openForm(d,t)});
+  $("days").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{const before=planFor(wMon);const idx=before.findIndex(x=>x.id===b.dataset.rm);
+    const w=editWeek(wMon);if(idx>-1)w.splice(idx,1);save();renderWeek();toast("Weggehaald voor deze week")});
+  $("days").querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const [d,t]=b.dataset.add.split("|");editWeek(wMon).push({id:uid(),day:+d,type:t});save();renderWeek();toast(`${TYPE[t]} toegevoegd op ${DAYS[+d].toLowerCase()}`)});
+}
+function slotDone(e,extra){
+  const r=result(e);
+  return `<div class="slot done"><span class="score">${e.score}</span><span class="what">${TYPE[e.type]}${e.opp?" · "+esc(e.opp):""}${r?` <span class="chip ${r}">${e.us}-${e.them}</span>`:""}<small>Ingevuld${extra?" · extra":""}${e.type==="wedstrijd"&&(e.goals||e.assists)?` · ${e.goals||0} goals, ${e.assists||0} assists`:""}</small></span></div>`;
+}
+function renderSched(){
+  const el=$("sched");el.innerHTML=db.schedule.map((t,i)=>`<button type="button" data-i="${i}" class="${t==="training"?"t":t==="wedstrijd"?"w":""}">${DAYS[i]}<small>${t==="training"?"Training":t==="wedstrijd"?"Wedstrijd":"–"}</small></button>`).join("");
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;const c=db.schedule[i];db.schedule[i]=c===null?"training":c==="training"?"wedstrijd":null;save();renderSched();renderWeek()});
+}
+
+// ---- Formulier
+const SKILLS=[["tech","Techniek"],["pass","Passen"],["shot","Schieten"],["def","Verdedigen"],["cond","Conditie"]];
+const lastSleep=()=>{const e=sorted().reverse().find(x=>x.sleep);return e?e.sleep:9};
+const st={type:"training",score:null,energy:3,effort:3,goals:0,assists:0,us:0,them:0,sleep:9,skills:{},from:null};
+function setType(t){st.type=t;$("t-training").setAttribute("aria-pressed",t==="training");$("t-wedstrijd").setAttribute("aria-pressed",t==="wedstrijd");$("oppField").hidden=t!=="wedstrijd";$("matchStats").hidden=t!=="wedstrijd";$("matchRes").hidden=t!=="wedstrijd"}
+const fmtSleep=h=>String(h).replace(".",",")+" u";
+const result=e=>e.type!=="wedstrijd"||e.us==null?null:e.us>e.them?"W":e.us<e.them?"V":"G";
+const RES_L={W:"Gewonnen",G:"Gelijk",V:"Verloren"};
+function renderSkillInputs(){
+  $("skills").innerHTML=SKILLS.map(([k,l])=>`<div class="skillrow"><span>${l}</span><div class="dots" data-sk="${k}">${[1,2,3,4,5].map(n=>`<button type="button" aria-label="${l} ${n}" aria-pressed="${st.skills[k]===n}">${n}</button>`).join("")}</div></div>`).join("");
+  $("skills").querySelectorAll("[data-sk]").forEach(row=>{const k=row.dataset.sk;[...row.children].forEach((b,i)=>b.onclick=()=>{st.skills[k]=st.skills[k]===i+1?undefined:i+1;[...row.children].forEach((c,j)=>c.setAttribute("aria-pressed",st.skills[k]===j+1))})});
+}
+$("t-training").onclick=()=>setType("training");
+$("t-wedstrijd").onclick=()=>setType("wedstrijd");
+function openForm(date,type,from){
+  $("f-date").value=date;
+  if(!type){const i=(parse(date).getDay()+6)%7;type=planFor(mondayOf(date)).find(p=>p.day===i)?.type||"training"}
+  setType(type);st.from=from||"week";st.sleep=lastSleep();$("c-sleep").textContent=fmtSleep(st.sleep);show("nieuw");
+}
+const sc=$("scale");
+for(let i=1;i<=10;i++){const b=document.createElement("button");b.type="button";b.textContent=i;b.setAttribute("aria-pressed","false");b.setAttribute("aria-label","Cijfer "+i);b.onclick=()=>{st.score=i;[...sc.children].forEach((c,j)=>c.setAttribute("aria-pressed",j+1===i));$("saveNote").textContent="Klaar om op te slaan."};sc.appendChild(b)}
+function dots(el,key,labels){labels.forEach((l,i)=>{const b=document.createElement("button");b.type="button";b.textContent=i+1;b.title=l;b.setAttribute("aria-label",l);b.setAttribute("aria-pressed",i+1===st[key]);b.onclick=()=>{st[key]=i+1;[...el.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i))};el.appendChild(b)})}
+dots($("energy"),"energy",["Leeg","Moe","Gewoon","Fit","Topfit"]);
+dots($("effort"),"effort",["Weinig","Matig","Gewoon","Goed","Alles gegeven"]);
+document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{const k=b.dataset.c;const[mn,mx]=k==="sleep"?[3,14]:[0,30];st[k]=Math.min(mx,Math.max(mn,st[k]+(+b.dataset.d)));$("c-"+k).textContent=k==="sleep"?fmtSleep(st[k]):st[k]});
+
+$("save").onclick=()=>{
+  if(!st.score){$("saveNote").textContent="Kies eerst een cijfer van 1 tot 10.";sc.scrollIntoView({behavior:"smooth",block:"center"});return}
+  const e={id:uid(),date:$("f-date").value||TODAY,type:st.type,score:st.score,energy:st.energy,effort:st.effort,
+    good:$("f-good").value.trim(),better:$("f-better").value.trim(),goal:$("f-goal").value.trim(),sleep:st.sleep};
+  const sk={};SKILLS.forEach(([k])=>{if(st.skills[k])sk[k]=st.skills[k]});if(Object.keys(sk).length)e.skills=sk;
+  if(st.type==="wedstrijd"){e.opp=$("f-opp").value.trim();e.goals=st.goals;e.assists=st.assists;e.us=st.us;e.them=st.them}
+  db.entries.push(e);const ok=save();
+  ["f-good","f-better","f-goal","f-opp"].forEach(id=>$(id).value="");
+  st.score=null;st.goals=0;st.assists=0;st.us=0;st.them=0;st.skills={};
+  ["goals","assists","us","them"].forEach(k=>$("c-"+k).textContent=0);renderSkillInputs();
+  [...sc.children].forEach(c=>c.setAttribute("aria-pressed","false"));
+  $("saveNote").textContent="Kies eerst een cijfer.";
+  toast(ok?"Opgeslagen":"Opgeslagen, maar alleen tot je de pagina sluit");
+  wMon=mondayOf(e.date);renderAll();show("week");
+};
+
+// ---- Dagboek
+const sorted=()=>db.entries.slice().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+const fmt=s=>parse(s).toLocaleDateString("nl-NL",{weekday:"short",day:"numeric",month:"short"});
+const energyL=["","Leeg","Moe","Gewoon","Fit","Topfit"];
+let filter="all";
+$("fl-all").onclick=()=>{filter="all";$("fl-all").setAttribute("aria-pressed","true");$("fl-match").setAttribute("aria-pressed","false");renderList()};
+$("fl-match").onclick=()=>{filter="match";$("fl-all").setAttribute("aria-pressed","false");$("fl-match").setAttribute("aria-pressed","true");renderList()};
+function renderList(){
+  const list=$("list");const items=sorted().reverse().filter(e=>filter==="all"||e.type==="wedstrijd");
+  if(!items.length){list.innerHTML=`<div class="empty">${filter==="match"?"Nog geen wedstrijden ingevuld.":"Je dagboek is nog leeg.<br>Ga naar <b>Week</b> en tik op <b>Invullen</b> na je training."}</div>`;return}
+  list.innerHTML=items.map(e=>`
+    <article class="entry">
+      <div class="badge"><b>${e.score}</b><small>cijfer</small></div>
+      <div class="body">
+        <div class="meta">
+          <span class="chip ${e.type==="wedstrijd"?"match":""}">${TYPE[e.type]}</span>
+          <span class="chip">${energyL[e.energy]||""}</span>
+          ${result(e)?`<span class="chip ${result(e)}">${RES_L[result(e)]} ${e.us}-${e.them}</span>`:""}
+          ${e.type==="wedstrijd"&&(e.goals||e.assists)?`<span class="chip">${e.goals||0} goals · ${e.assists||0} assists</span>`:""}
+          ${e.sleep?`<span class="chip">Slaap ${fmtSleep(e.sleep)}</span>`:""}
+        </div>
+        <h3>${fmt(e.date)}${e.opp?" · tegen "+esc(e.opp):""}</h3>
+        ${e.good?`<p><strong>Ging goed</strong>${esc(e.good)}</p>`:""}
+        ${e.better?`<p><strong>Kan beter</strong>${esc(e.better)}</p>`:""}
+        ${e.goal?`<p><strong>Doel</strong>${esc(e.goal)}</p>`:""}
+        ${e.skills?`<p><strong>Vaardigheden</strong>${SKILLS.filter(([k])=>e.skills[k]).map(([k,l])=>`${l} ${e.skills[k]}`).join(" · ")}</p>`:""}
+        <div class="del" data-id="${e.id}"><button type="button" class="ghost ask">Verwijderen</button></div>
+      </div>
+    </article>`).join("");
+  list.querySelectorAll(".del").forEach(d=>{
+    d.querySelector(".ask").onclick=()=>{d.innerHTML='<button type="button" class="ghost yes">Ja, verwijder</button><button type="button" class="ghost no">Annuleer</button>';
+      d.querySelector(".no").onclick=renderList;
+      d.querySelector(".yes").onclick=()=>{db.entries=db.entries.filter(x=>x.id!==d.dataset.id);save();toast("Verwijderd");renderAll()}};
+  });
+}
+
+// ---- Groei
+let range="week",off=0;
+document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{range=b.dataset.r;off=0;document.querySelectorAll("[data-r]").forEach(x=>x.setAttribute("aria-pressed",x===b));renderStats()});
+$("pPrev").onclick=()=>{off--;renderStats()};
+$("pNext").onclick=()=>{off++;renderStats()};
+
+function period(){
+  const t=parse(TODAY);
+  if(range==="week"){const s=addDays(mondayOf(TODAY),7*off);const e=addDays(s,6);
+    const a=parse(s),b=parse(e);return{s,e,title:(off===0?"Deze week":"Week "+weekNo(s))+`<small>${a.getDate()} ${MONTHS[a.getMonth()]} – ${b.getDate()} ${MONTHS[b.getMonth()]}</small>`}}
+  if(range==="maand"){const d=new Date(t.getFullYear(),t.getMonth()+off,1,12);const end=new Date(d.getFullYear(),d.getMonth()+1,0,12);
+    return{s:iso(d),e:iso(end),days:end.getDate(),y:d.getFullYear(),m:d.getMonth(),title:`${MONTHS_L[d.getMonth()]}<small>${d.getFullYear()}</small>`}}
+  const y=t.getFullYear()+off;return{s:y+"-01-01",e:y+"-12-31",y,title:`${y}<small>per maand</small>`};
+}
+function renderStats(){
+  const p=period();$("pTitle").innerHTML=p.title;
+  $("pNext").disabled=off>=0;$("pNext").style.opacity=off>=0?.35:1;
+  const s=sorted().filter(e=>e.date>=p.s&&e.date<=p.e);
+  $("s-count").textContent=s.length;
+  $("s-avg").textContent=s.length?nl(avg(s)):"–";
+  $("s-goals").textContent=s.reduce((a,e)=>a+(e.goals||0)+(e.assists||0),0);
+  $("chartTitle").textContent=range==="jaar"?"Gemiddeld cijfer per maand":"Cijfers";
+  $("legend").hidden=range==="jaar";
+  const tr=$("trend");
+  if(s.length>=4){const h=Math.floor(s.length/2);const a=avg(s.slice(0,h)),b=avg(s.slice(h));const d=b-a;
+    tr.innerHTML=d>0.2?`<span class="up">▲ Stijgende lijn:</span> laatste keren gemiddeld ${nl(b)}, eerder ${nl(a)}.`:
+      d<-0.2?`<span class="down">▼ Iets lager:</span> laatste keren ${nl(b)}, eerder ${nl(a)}. Kijk eens naar je energie en slaap.`:`Stabiel rond een ${nl(b)}.`;
+  }else tr.textContent=s.length?"Na 4 keer in deze periode zie je hier of je stijgt.":"";
+  const recent=sorted().slice(-3).reverse().filter(e=>e.better);
+  $("workOn").innerHTML=recent.length?recent.map(e=>`<p class="note" style="margin:0 0 8px"><b style="color:var(--fg)">${fmt(e.date)}</b> · ${esc(e.better)}</p>`).join(""):'<p class="note">Vul bij een training "Wat kan beter?" in, dan zie je hier waar je aan werkt.</p>';
+  drawChart(p,s);renderResults(s);drawRadar(s);renderSleep(s);
+}
+function renderResults(s){
+  const m=s.filter(result);const c={W:0,G:0,V:0};m.forEach(e=>c[result(e)]++);
+  $("r-w").textContent=c.W;$("r-g").textContent=c.G;$("r-v").textContent=c.V;
+  if(!m.length){$("r-note").textContent="Nog geen wedstrijden met een uitslag in deze periode.";return}
+  const pts=c.W*3+c.G;const voor=m.reduce((a,e)=>a+e.us,0),tegen=m.reduce((a,e)=>a+e.them,0);
+  const win=m.filter(e=>result(e)==="W"),rest=m.filter(e=>result(e)!=="W");
+  let t=`${pts} punten uit ${m.length} ${m.length===1?"wedstrijd":"wedstrijden"} · doelsaldo ${voor}-${tegen}.`;
+  if(win.length&&rest.length)t+=` Jouw cijfer bij winst: ${nl(win.reduce((a,e)=>a+e.score,0)/win.length)}, anders: ${nl(rest.reduce((a,e)=>a+e.score,0)/rest.length)}.`;
+  $("r-note").textContent=t;
+}
+function skillAvg(s){
+  const out={};SKILLS.forEach(([k])=>{let t=0,n=0;s.forEach(e=>{if(e.skills&&e.skills[k]){t+=e.skills[k]*W(e);n+=W(e)}});out[k]=n?t/n:null});return out;
+}
+function drawRadar(s){
+  const c=$("radar");const dpr=window.devicePixelRatio||1;const w=c.clientWidth||320,h=260;
+  c.width=w*dpr;c.height=h*dpr;const g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const cs=getComputedStyle(document.documentElement);const col=n=>cs.getPropertyValue(n).trim()||"#888";
+  const a=skillAvg(s);const has=SKILLS.some(([k])=>a[k]!=null);
+  const empty=$("radarEmpty");
+  const cx=w/2,cy=h/2+4,r=Math.min(w/2-70,h/2-30);
+  const ang=i=>-Math.PI/2+i*2*Math.PI/SKILLS.length;
+  g.strokeStyle=col("--line");g.lineWidth=1;
+  for(let ring=1;ring<=5;ring++){g.beginPath();SKILLS.forEach((_,i)=>{const x=cx+Math.cos(ang(i))*r*ring/5,y=cy+Math.sin(ang(i))*r*ring/5;i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.stroke()}
+  SKILLS.forEach((_,i)=>{g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(ang(i))*r,cy+Math.sin(ang(i))*r);g.stroke()});
+  g.font="600 13px "+col("--body");g.textBaseline="middle";
+  SKILLS.forEach(([k,l],i)=>{const x=cx+Math.cos(ang(i))*(r+14),y=cy+Math.sin(ang(i))*(r+14);const cosv=Math.cos(ang(i));
+    g.textAlign=Math.abs(cosv)<.2?"center":cosv>0?"left":"right";g.fillStyle=col("--fg");g.fillText(l,x,y-(a[k]!=null?7:0));
+    if(a[k]!=null){g.font="12px "+col("--body");g.fillStyle=col("--muted");g.fillText(nl(a[k]),x,y+8);g.font="600 13px "+col("--body")}});
+  if(!has){empty.hidden=false;empty.textContent="Vul bij een training je vaardigheden in, dan zie je hier waar je sterk bent.";$("skillNote").textContent="";return}
+  empty.hidden=true;
+  g.beginPath();SKILLS.forEach(([k],i)=>{const v=a[k]||0;const x=cx+Math.cos(ang(i))*r*v/5,y=cy+Math.sin(ang(i))*r*v/5;i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();
+  g.globalAlpha=.25;g.fillStyle=col("--good");g.fill();g.globalAlpha=1;g.strokeStyle=col("--good");g.lineWidth=2.5;g.stroke();
+  SKILLS.forEach(([k],i)=>{if(a[k]==null)return;const x=cx+Math.cos(ang(i))*r*a[k]/5,y=cy+Math.sin(ang(i))*r*a[k]/5;g.beginPath();g.arc(x,y,4,0,7);g.fillStyle=col("--good");g.fill()});
+  const filled=SKILLS.filter(([k])=>a[k]!=null).sort((x,y)=>a[y[0]]-a[x[0]]);
+  $("skillNote").innerHTML=filled.length>1?`Sterkst: <b>${filled[0][1].toLowerCase()}</b>. Hier valt het meest te winnen: <b>${filled[filled.length-1][1].toLowerCase()}</b>.`:"";
+}
+function renderSleep(s){
+  const box=$("sleepBox");const z=s.filter(e=>e.sleep);
+  if(!z.length){box.innerHTML='<p class="note">Vul bij elke keer in hoeveel je hebt geslapen. Dan zie je hier of meer slaap een beter cijfer geeft.</p>';return}
+  const gem=z.reduce((a,e)=>a+e.sleep,0)/z.length;
+  const veel=z.filter(e=>e.sleep>=9),weinig=z.filter(e=>e.sleep<9);
+  let html=`<p class="note" style="margin-bottom:10px">Gemiddeld <b style="color:var(--fg)">${fmtSleep(Math.round(gem*10)/10)}</b> geslapen voor een training of wedstrijd.</p>`;
+  if(veel.length&&weinig.length){
+    const a=avg(veel),b=avg(weinig);
+    html+=`<div class="bars"><div class="bar"><span>9 uur of meer</span><div class="track"><i style="width:${a*10}%"></i></div><b>${nl(a)}</b></div><div class="bar"><span>Minder dan 9 uur</span><div class="track"><i style="width:${b*10}%;background:var(--accent)"></i></div><b>${nl(b)}</b></div></div>`;
+    html+=`<p class="trend">${a-b>=0.3?"Na een goede nacht speel je duidelijk beter.":b-a>=0.3?"Opvallend: met minder slaap scoor je nu hoger. Houd het in de gaten.":"Tot nu toe maakt slaap weinig verschil in je cijfer."}</p>`;
+  }else html+=`<p class="note">Zodra je zowel nachten van 9 uur of meer als korter hebt ingevuld, zie je hier het verschil in cijfer.</p>`;
+  box.innerHTML=html;
+}
+// Wedstrijden tellen 2x mee in elk gemiddelde
+const W=e=>e.type==="wedstrijd"?2:1;
+const avg=a=>a.reduce((x,e)=>x+e.score*W(e),0)/a.reduce((x,e)=>x+W(e),0);
+
+function drawChart(p,s){
+  const c=$("chart");const dpr=window.devicePixelRatio||1;const w=c.clientWidth||320,h=210;
+  c.width=w*dpr;c.height=h*dpr;const g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const cs=getComputedStyle(document.documentElement);const col=n=>cs.getPropertyValue(n).trim()||"#888";
+  const L=28,R=12,T=12,B=24,pw=w-L-R,ph=h-T-B;
+  const y=v=>T+ph-(v-1)/9*ph;
+  g.font="12px "+col("--body");g.fillStyle=col("--muted");g.strokeStyle=col("--line");g.lineWidth=1;g.textAlign="right";g.textBaseline="middle";
+  [1,4,7,10].forEach(v=>{g.beginPath();g.moveTo(L,y(v));g.lineTo(w-R,y(v));g.stroke();g.fillText(v,L-7,y(v))});
+  // x-labels
+  let labels=[],xs;
+  if(range==="week"){xs=d=>((parse(d)-parse(p.s))/864e5)/6;labels=DAYS.map((l,i)=>[i/6,l])}
+  else if(range==="maand"){xs=d=>(parse(d).getDate()-1)/(p.days-1);labels=[1,8,15,22,p.days].map(n=>[(n-1)/(p.days-1),String(n)])}
+  else{xs=null;labels=MONTHS.map((m,i)=>[i/11,i%2===0?m:""])}
+  g.textBaseline="alphabetic";g.fillStyle=col("--muted");
+  labels.forEach(([x,l],i)=>{g.textAlign=i===0?"left":i===labels.length-1?"right":"center";g.fillText(l,L+x*pw,h-5)});
+  let pts=[];
+  if(range==="jaar"){for(let m=0;m<12;m++){const ms=s.filter(e=>parse(e.date).getMonth()===m);if(ms.length)pts.push([L+m/11*pw,y(avg(ms)),null])}}
+  else pts=s.map(e=>[L+xs(e.date)*pw,y(e.score),e]);
+  const empty=$("chartEmpty");
+  if(!pts.length){empty.hidden=false;empty.textContent=range==="week"?"Nog geen cijfers deze week. Vul je training in en je ziet hier je lijn.":range==="maand"?"Nog geen cijfers in deze maand.":"Nog geen cijfers in dit jaar.";return}
+  empty.hidden=true;
+  if(range!=="jaar"&&s.length>1){const ay=y(avg(s));g.save();g.setLineDash([5,5]);g.strokeStyle=col("--muted");g.lineWidth=1.5;g.beginPath();g.moveTo(L,ay);g.lineTo(w-R,ay);g.stroke();g.restore();g.fillStyle=col("--muted");g.textAlign="right";g.textBaseline="bottom";g.fillText("gem. "+nl(avg(s)),w-R,ay-3)}
+  if(pts.length>1){
+    g.beginPath();pts.forEach((q,i)=>i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));
+    g.lineTo(pts[pts.length-1][0],T+ph);g.lineTo(pts[0][0],T+ph);g.closePath();g.globalAlpha=.15;g.fillStyle=col("--good");g.fill();g.globalAlpha=1;
+    g.beginPath();pts.forEach((q,i)=>i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.strokeStyle=col("--good");g.lineWidth=2.5;g.lineJoin="round";g.stroke();
+  }
+  pts.forEach(q=>{const m=q[2]&&q[2].type==="wedstrijd";g.beginPath();g.arc(q[0],q[1],m?5.5:4.5,0,7);g.fillStyle=m?col("--accent"):col("--good");g.fill();g.lineWidth=2;g.strokeStyle=col("--card");g.stroke()});
+}
+
+// ---- Algemeen
+function weekStreak(){
+  const set=new Set(db.entries.map(e=>mondayOf(e.date)));
+  let n=0,c=mondayOf(TODAY);if(!set.has(c))c=addDays(c,-7);
+  while(set.has(c)){n++;c=addDays(c,-7)}return n;
+}
+function renderAll(){
+  const n=weekStreak();
+  $("streak").innerHTML=db.entries.length?`<b>${n}</b> ${n===1?"week":"weken"} op rij ingevuld`:"Begin je reeks na je eerste training";
+  const last=sorted().reverse().find(e=>e.goal);
+  $("lastGoal").hidden=!last;if(last)$("lastGoalText").textContent=last.goal;
+  renderWeek();renderSched();renderList();renderStats();
+}
+function show(v){
+  ["week","nieuw","dagboek","groei"].forEach(x=>{$("v-"+x).hidden=x!==v});
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v));
+  if(v==="groei")renderStats();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{if(b.dataset.v==="nieuw")openForm(TODAY,null,"nav");else show(b.dataset.v)});
+window.addEventListener("resize",()=>{if(!$("v-groei").hidden)renderStats()});
+try{const mq=window.matchMedia("(prefers-color-scheme: dark)");mq.addEventListener("change",()=>renderStats())}catch(e){}
+
+$("f-date").value=TODAY;
+renderSkillInputs();st.sleep=lastSleep();$("c-sleep").textContent=fmtSleep(st.sleep);
+renderAll();
+const h=(location.hash||"").slice(1);
+show(["nieuw","dagboek","groei"].includes(h)?h:"week");
+})();
+</script>
+</body>
+</html>
